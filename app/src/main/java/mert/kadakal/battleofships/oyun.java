@@ -3,25 +3,23 @@ package mert.kadakal.battleofships;
 import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 
 public class oyun extends AppCompatActivity {
 
     HashMap<Integer, String> oyuncu_isimleri;
-    int turn;
+    int turn = 0;
     TextView adetler_1o;
     TextView adetler_2o;
     HashMap<String, Integer> adetler_1;
@@ -30,10 +28,20 @@ public class oyun extends AppCompatActivity {
     ArrayList<ArrayList<Integer>> tablo_2_gorunurluk;
     ArrayList<ArrayList<String>> tablo_1;
     ArrayList<ArrayList<String>> tablo_2;
-    int imageResId;
-    int filledSquareId;
+    int emptySquareId;
+    int waterSquareId;
+    int battleshipId;
+    int carrierId;
+    int destroyerId;
+    int submarineId;
+    int patrol_boatId;
     GridLayout gridLayout;
     TextView kim_saldiriyor;
+    TextView kimin_tahtasi;
+    ArrayList<ArrayList<ArrayList<Integer>>> battleship_xy_1;
+    ArrayList<ArrayList<ArrayList<Integer>>> patrolboat_xy_1;
+    ArrayList<ArrayList<ArrayList<Integer>>> battleship_xy_2;
+    ArrayList<ArrayList<ArrayList<Integer>>> patrolboat_xy_2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +55,8 @@ public class oyun extends AppCompatActivity {
         turn = 0;
         kim_saldiriyor = findViewById(R.id.kimin_saldirdigi);
         kim_saldiriyor.setText(Html.fromHtml(String.format("<b>%s</b> saldırıyor!", oyuncu_isimleri.get(turn))));
+        kimin_tahtasi = findViewById(R.id.kimin_tahtasi);
+        kimin_tahtasi.setText(Html.fromHtml(String.format("<b>%s</b> oyuncusunun tahtası", oyuncu_isimleri.get(1-turn))));
 
         //10x10 tablo oluştur
         //---------------------------------------------------------------------------------
@@ -54,9 +64,14 @@ public class oyun extends AppCompatActivity {
         int numRows = 10;
         int numColumns = 10;
 
-        // Görsel kaynak
-        imageResId = R.drawable.empty_square;
-        filledSquareId = R.drawable.filled_square;
+        // Görsel kaynaklar
+        emptySquareId = R.drawable.empty_square;
+        waterSquareId = R.drawable.water_square;
+        carrierId = R.drawable.carrier;
+        battleshipId = R.drawable.battleship;
+        destroyerId = R.drawable.destroyer;
+        submarineId = R.drawable.submarine;
+        patrol_boatId = R.drawable.patrol_boat;
 
         // GridLayout ayarları
         gridLayout.setRowCount(numRows);
@@ -65,7 +80,7 @@ public class oyun extends AppCompatActivity {
         // Her hücre için ImageView ekle
         for (int i = 0; i < numRows * numColumns; i++) {
             ImageView imageView = new ImageView(this);
-            imageView.setImageResource(imageResId);
+            imageView.setImageResource(emptySquareId);
 
             // Hücre boyutlarını ayarla
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
@@ -166,6 +181,10 @@ public class oyun extends AppCompatActivity {
         }
 
         //her gemi için adetleri kadar yerleştirme yap
+        battleship_xy_1 = new ArrayList<>();
+        patrolboat_xy_1 = new ArrayList<>();
+        battleship_xy_2 = new ArrayList<>();
+        patrolboat_xy_2 = new ArrayList<>();
         HashMap<Integer, ArrayList<ArrayList<String>>> oyuncu_tabloları = new HashMap<>();
         oyuncu_tabloları.put(0, tablo_1);
         oyuncu_tabloları.put(1, tablo_2);
@@ -197,6 +216,36 @@ public class oyun extends AppCompatActivity {
                             for (ArrayList<Integer> item : dolduralacak_hucreler) {
                                 oyuncu_tabloları.get(oyuncu).get(item.get(0)).set(item.get(1), String.valueOf(gemi_ismi.charAt(0)));
                             }
+                            //battleship ve patrol boatların konumlarını kaydet
+                            ArrayList<ArrayList<Integer>> konumlar = new ArrayList<>();
+                            if (dolduralacak_hucreler.size() == 4) {
+                                if (turn == 0) {
+                                    konumlar.clear();
+                                    for (ArrayList<Integer> item : dolduralacak_hucreler) {
+                                        konumlar.add(item);
+                                    }
+                                    battleship_xy_1.add(konumlar);
+                                } else {
+                                    konumlar.clear();
+                                    for (ArrayList<Integer> item : dolduralacak_hucreler) {
+                                        konumlar.add(item);
+                                    }
+                                    battleship_xy_2.add(konumlar);                               }
+                            } else if (dolduralacak_hucreler.size() == 2) {
+                                if (turn == 0) {
+                                    konumlar.clear();
+                                    for (ArrayList<Integer> item : dolduralacak_hucreler) {
+                                        konumlar.add(item);
+                                    }
+                                    patrolboat_xy_1.add(konumlar);
+                                } else {
+                                    konumlar.clear();
+                                    for (ArrayList<Integer> item : dolduralacak_hucreler) {
+                                        konumlar.add(item);
+                                    }
+                                    patrolboat_xy_2.add(konumlar);
+                                }
+                            }
                             break;
                         }
                     }
@@ -212,33 +261,200 @@ public class oyun extends AppCompatActivity {
         if (turn == 0) {
             if (tablo_2_gorunurluk.get(sat).get(sut) == 0) {
                 tablo_2_gorunurluk.get(sat).set(sut, 1); //tablo_2'nin saldırılan konumunu görünür yap
+                check_capsized_battles(tablo_2, tablo_2_gorunurluk);
             }
         } else {
             if (tablo_1_gorunurluk.get(sat).get(sut) == 0) {
                 tablo_1_gorunurluk.get(sat).set(sut, 1); //tablo_1'nin saldırılan konumunu görünür yap
+                check_capsized_battles(tablo_1, tablo_1_gorunurluk);
             }
         }
         turn = 1 - turn;
         tabloyu_yukle(turn);
     }
 
+    private void check_capsized_battles(ArrayList<ArrayList<String>> tablo, ArrayList<ArrayList<Integer>> gorunurluk) {
+        int c = 0;
+        int d = 0;
+        int s = 0;
+        ArrayList<ArrayList<Integer>> battleships = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> patrol_boats = new ArrayList<>();
+        ArrayList<Integer> konumlar = new ArrayList<>();
+        if (turn == 0) {
+            for (int i = 0; i < 10; i++) {
+                for (int j = 0; j < 10; j++) {
+                    if (tablo_2_gorunurluk.get(i).get(j) == 1) {
+                        switch (tablo.get(i).get(j)) {
+                            case "c":
+                                c++;
+                                break;
+                            case "d":
+                                d++;
+                                break;
+                            case "s":
+                                s++;
+                                break;
+                            case "b":
+                                konumlar.clear();
+                                konumlar.add(i);
+                                konumlar.add(j);
+                                battleships.add(konumlar);
+                                break;
+                            case "p":
+                                konumlar.clear();
+                                konumlar.add(i);
+                                konumlar.add(j);
+                                patrol_boats.add(konumlar);
+                                break;
+                        }
+                    }
+                }
+            }
+            //kontrol et
+            if (c == 5 && adetler_2.get("carrier") != 0) {
+                adetler_2.replace("carrier", 0);
+                Toast.makeText(this, String.format("%s rakibin carrier gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+            }
+            if (d == 3 && adetler_2.get("destroyer") != 0) {
+                adetler_2.replace("destroyer", 0);
+                Toast.makeText(this, String.format("%s rakibin destroyer gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+            }
+            if (s == 3 && adetler_2.get("submarine") != 0) {
+                adetler_2.replace("submarine", 0);
+                Toast.makeText(this, String.format("%s rakibin submarine gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+            }
+            if (battleships.size() != 0 && adetler_2.get("battleship") != 0 && check_for_btshp_ptrlbt(battleships, battleship_xy_2, 2)) {
+                adetler_2.replace("battleship", adetler_2.get("battleship")-1);
+            }
+            if (patrol_boats.size() != 0 && adetler_2.get("patrol boat") != 0 && check_for_btshp_ptrlbt(patrol_boats, patrolboat_xy_2, 4)) {
+                adetler_2.replace("patrol boat", adetler_2.get("patrol boat")-1);
+            }
+        } else {
+            for (int i = 0; i < 10; i++) {
+                for (int j = 0; j < 10; j++) {
+                    if (tablo_1_gorunurluk.get(i).get(j) == 1) {
+                        switch (tablo.get(i).get(j)) {
+                            case "c":
+                                c++;
+                                break;
+                            case "d":
+                                d++;
+                                break;
+                            case "s":
+                                s++;
+                                break;
+                            case "b":
+                                konumlar.clear();
+                                konumlar.add(i);
+                                konumlar.add(j);
+                                battleships.add(konumlar);
+                                break;
+                            case "p":
+                                konumlar.clear();
+                                konumlar.add(i);
+                                konumlar.add(j);
+                                patrol_boats.add(konumlar);
+                                break;
+                        }
+                    }
+                }
+            }
+            //kontrol et
+            if (c == 5 && adetler_1.get("carrier") != 0) {
+                adetler_1.replace("carrier", 0);
+                Toast.makeText(this, String.format("%s rakibin carrier gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+            }
+            if (d == 3 && adetler_1.get("destroyer") != 0) {
+                adetler_1.replace("destroyer", 0);
+                Toast.makeText(this, String.format("%s rakibin destroyer gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+            }
+            if (s == 3 && adetler_1.get("submarine") != 0) {
+                adetler_1.replace("submarine", 0);
+                Toast.makeText(this, String.format("%s rakibin submarine gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+            }
+            if (battleships.size() != 0 && adetler_1.get("battleship") != 0 && check_for_btshp_ptrlbt(battleships, battleship_xy_1, 2)) {
+                adetler_1.replace("battleship", adetler_1.get("battleship")-1);
+            }
+            if (patrol_boats.size() != 0 && adetler_1.get("patrol boat") != 0 && check_for_btshp_ptrlbt(patrol_boats, patrolboat_xy_1, 4)) {
+                adetler_1.replace("patrol boat", adetler_1.get("patrol boat")-1);
+            }
+        }
+    }
+
+    private boolean check_for_btshp_ptrlbt(ArrayList<ArrayList<Integer>> bulunanlar, ArrayList<ArrayList<ArrayList<Integer>>> mevcutlar, int count) {
+        int adet = 0;
+        for (ArrayList<ArrayList<Integer>> item_mevcut : mevcutlar) {
+            for (ArrayList<Integer> item_mevcut_sub : item_mevcut) {
+                for (ArrayList<Integer> item_bulunan : bulunanlar) {
+                    if (item_bulunan.get(0) == item_mevcut_sub.get(0) && item_bulunan.get(1) == item_mevcut_sub.get(1)) {
+                        adet++;
+                    }
+                }
+            }
+            if (adet == count) {
+                mevcutlar.remove(item_mevcut);
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void tabloyu_yukle(int turn) {
         gridLayout.removeAllViews();
         kim_saldiriyor.setText(Html.fromHtml(String.format("<b>%s</b> saldırıyor!", oyuncu_isimleri.get(turn))));
+        kimin_tahtasi.setText(Html.fromHtml(String.format("<b>%s</b> oyuncusunun tahtası", oyuncu_isimleri.get(1-turn))));
         for (int i = 0; i < 100; i++) {
             ImageView imageView = new ImageView(this);
 
-            if (turn == 0) {
+            if (turn == 1) {
                 if (tablo_1_gorunurluk.get(i/10).get(i%10) == 1) {
-                    imageView.setImageResource(filledSquareId);
+                    switch (tablo_1.get(i/10).get(i%10)) {
+                        case "c":
+                            imageView.setImageResource(carrierId);
+                            break;
+                        case "b":
+                            imageView.setImageResource(battleshipId);
+                            break;
+                        case "d":
+                            imageView.setImageResource(destroyerId);
+                            break;
+                        case "s":
+                            imageView.setImageResource(submarineId);
+                            break;
+                        case "p":
+                            imageView.setImageResource(patrol_boatId);
+                            break;
+                        case "x":
+                            imageView.setImageResource(waterSquareId);
+                            break;
+                    }
                 } else {
-                    imageView.setImageResource(imageResId);
+                    imageView.setImageResource(emptySquareId);
                 }
             } else {
                 if (tablo_2_gorunurluk.get(i/10).get(i%10) == 1) {
-                    imageView.setImageResource(filledSquareId);
+                    switch (tablo_2.get(i/10).get(i%10)) {
+                        case "c":
+                            imageView.setImageResource(carrierId);
+                            break;
+                        case "b":
+                            imageView.setImageResource(battleshipId);
+                            break;
+                        case "d":
+                            imageView.setImageResource(destroyerId);
+                            break;
+                        case "s":
+                            imageView.setImageResource(submarineId);
+                            break;
+                        case "p":
+                            imageView.setImageResource(patrol_boatId);
+                            break;
+                        case "x":
+                            imageView.setImageResource(waterSquareId);
+                            break;
+                    }
                 } else {
-                    imageView.setImageResource(imageResId);
+                    imageView.setImageResource(emptySquareId);
                 }
             }
 
@@ -249,6 +465,34 @@ public class oyun extends AppCompatActivity {
             params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);
             params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);
             imageView.setLayoutParams(params);
+
+            //tıklanan hücreyi algıla, saldırıyı gerçekleştir
+            View.OnClickListener imageClickListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Tıklanan ImageView'ı tag'ine göre belirleme
+                    int position = (int) v.getTag();  // Tag ile sırasını alıyoruz
+                    Log.d("turn", String.valueOf(turn));
+                    if (turn == 0) {
+                        if (tablo_2_gorunurluk.get(position/10).get(position%10) == 1) {
+                            Toast.makeText(oyun.this, "Boş bir hücre seçiniz", Toast.LENGTH_SHORT).show();
+                        } else {
+                            saldir(position/10, position%10);
+                            adetleri_guncelle();
+                        }
+                    } else {
+                        if (tablo_1_gorunurluk.get(position/10).get(position%10) == 1) {
+                            Toast.makeText(oyun.this, "Boş bir hücre seçiniz", Toast.LENGTH_SHORT).show();
+                        } else {
+                            saldir(position/10, position%10);
+                            adetleri_guncelle();
+                        }
+                    }
+                }
+            };
+
+            // Tıklama dinleyicisi ekle
+            imageView.setOnClickListener(imageClickListener);
 
             // Hangi ImageView'a tıklandığını belirlemek için tag ayarla
             imageView.setTag(i);  // Tag olarak sırasını kullanıyoruz
