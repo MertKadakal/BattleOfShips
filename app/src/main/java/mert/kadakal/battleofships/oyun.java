@@ -219,7 +219,7 @@ public class oyun extends AppCompatActivity {
                             //battleship ve patrol boatların konumlarını kaydet
                             ArrayList<ArrayList<Integer>> konumlar = new ArrayList<>();
                             if (dolduralacak_hucreler.size() == 4) {
-                                if (turn == 0) {
+                                if (oyuncu == 0) {
                                     konumlar.clear();
                                     for (ArrayList<Integer> item : dolduralacak_hucreler) {
                                         konumlar.add(item);
@@ -230,9 +230,10 @@ public class oyun extends AppCompatActivity {
                                     for (ArrayList<Integer> item : dolduralacak_hucreler) {
                                         konumlar.add(item);
                                     }
-                                    battleship_xy_2.add(konumlar);                               }
+                                    battleship_xy_2.add(konumlar);
+                                }
                             } else if (dolduralacak_hucreler.size() == 2) {
-                                if (turn == 0) {
+                                if (oyuncu == 0) {
                                     konumlar.clear();
                                     for (ArrayList<Integer> item : dolduralacak_hucreler) {
                                         konumlar.add(item);
@@ -252,7 +253,6 @@ public class oyun extends AppCompatActivity {
                 }
             }
         }
-
         //oyuncuların kaçar gemisi kaldığını tablo altına yaz
         adetleri_guncelle();
     }
@@ -261,25 +261,24 @@ public class oyun extends AppCompatActivity {
         if (turn == 0) {
             if (tablo_2_gorunurluk.get(sat).get(sut) == 0) {
                 tablo_2_gorunurluk.get(sat).set(sut, 1); //tablo_2'nin saldırılan konumunu görünür yap
-                check_capsized_battles(tablo_2, tablo_2_gorunurluk);
+                check_capsized_battles(tablo_2);
             }
         } else {
             if (tablo_1_gorunurluk.get(sat).get(sut) == 0) {
                 tablo_1_gorunurluk.get(sat).set(sut, 1); //tablo_1'nin saldırılan konumunu görünür yap
-                check_capsized_battles(tablo_1, tablo_1_gorunurluk);
+                check_capsized_battles(tablo_1);
             }
         }
         turn = 1 - turn;
         tabloyu_yukle(turn);
     }
 
-    private void check_capsized_battles(ArrayList<ArrayList<String>> tablo, ArrayList<ArrayList<Integer>> gorunurluk) {
+    private void check_capsized_battles(ArrayList<ArrayList<String>> tablo) {
         int c = 0;
         int d = 0;
         int s = 0;
         ArrayList<ArrayList<Integer>> battleships = new ArrayList<>();
         ArrayList<ArrayList<Integer>> patrol_boats = new ArrayList<>();
-        ArrayList<Integer> konumlar = new ArrayList<>();
         if (turn == 0) {
             for (int i = 0; i < 10; i++) {
                 for (int j = 0; j < 10; j++) {
@@ -295,21 +294,24 @@ public class oyun extends AppCompatActivity {
                                 s++;
                                 break;
                             case "b":
-                                konumlar.clear();
+                                ArrayList<Integer> konumlar = new ArrayList<>();
                                 konumlar.add(i);
                                 konumlar.add(j);
                                 battleships.add(konumlar);
                                 break;
                             case "p":
-                                konumlar.clear();
-                                konumlar.add(i);
-                                konumlar.add(j);
-                                patrol_boats.add(konumlar);
+                                ArrayList<Integer> konumlar1 = new ArrayList<>();
+                                konumlar1.add(i);
+                                konumlar1.add(j);
+                                patrol_boats.add(konumlar1);
                                 break;
                         }
                     }
                 }
             }
+            Log.d("1", battleships.toString());
+            Log.d("1", patrol_boats.toString());
+
             //kontrol et
             if (c == 5 && adetler_2.get("carrier") != 0) {
                 adetler_2.replace("carrier", 0);
@@ -323,11 +325,13 @@ public class oyun extends AppCompatActivity {
                 adetler_2.replace("submarine", 0);
                 Toast.makeText(this, String.format("%s rakibin submarine gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
             }
-            if (battleships.size() != 0 && adetler_2.get("battleship") != 0 && check_for_btshp_ptrlbt(battleships, battleship_xy_2, 2)) {
+            if (battleships.size() > 3 && adetler_2.get("battleship") != 0 && check_for_btshp_ptrlbt(battleships, battleship_xy_2)) {
                 adetler_2.replace("battleship", adetler_2.get("battleship")-1);
+                Toast.makeText(this, String.format("%s rakibin bir battleship gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
             }
-            if (patrol_boats.size() != 0 && adetler_2.get("patrol boat") != 0 && check_for_btshp_ptrlbt(patrol_boats, patrolboat_xy_2, 4)) {
+            if (patrol_boats.size() > 1 && adetler_2.get("patrol boat") != 0 && check_for_btshp_ptrlbt(patrol_boats, patrolboat_xy_2)) {
                 adetler_2.replace("patrol boat", adetler_2.get("patrol boat")-1);
+                Toast.makeText(this, String.format("%s rakibin patrol boat gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
             }
         } else {
             for (int i = 0; i < 10; i++) {
@@ -344,21 +348,23 @@ public class oyun extends AppCompatActivity {
                                 s++;
                                 break;
                             case "b":
-                                konumlar.clear();
+                                ArrayList<Integer> konumlar = new ArrayList<>();
                                 konumlar.add(i);
                                 konumlar.add(j);
                                 battleships.add(konumlar);
                                 break;
                             case "p":
-                                konumlar.clear();
-                                konumlar.add(i);
-                                konumlar.add(j);
-                                patrol_boats.add(konumlar);
+                                ArrayList<Integer> konumlar1 = new ArrayList<>();
+                                konumlar1.add(i);
+                                konumlar1.add(j);
+                                patrol_boats.add(konumlar1);
                                 break;
                         }
                     }
                 }
             }
+            Log.d("0", battleships.toString());
+            Log.d("0", patrol_boats.toString());
             //kontrol et
             if (c == 5 && adetler_1.get("carrier") != 0) {
                 adetler_1.replace("carrier", 0);
@@ -372,32 +378,33 @@ public class oyun extends AppCompatActivity {
                 adetler_1.replace("submarine", 0);
                 Toast.makeText(this, String.format("%s rakibin submarine gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
             }
-            if (battleships.size() != 0 && adetler_1.get("battleship") != 0 && check_for_btshp_ptrlbt(battleships, battleship_xy_1, 2)) {
+            if (battleships.size() > 3 && adetler_1.get("battleship") != 0 && check_for_btshp_ptrlbt(battleships, battleship_xy_1)) {
                 adetler_1.replace("battleship", adetler_1.get("battleship")-1);
+                Toast.makeText(this, String.format("%s rakibin battleship gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
             }
-            if (patrol_boats.size() != 0 && adetler_1.get("patrol boat") != 0 && check_for_btshp_ptrlbt(patrol_boats, patrolboat_xy_1, 4)) {
+            if (patrol_boats.size() > 1 && adetler_1.get("patrol boat") != 0 && check_for_btshp_ptrlbt(patrol_boats, patrolboat_xy_1)) {
                 adetler_1.replace("patrol boat", adetler_1.get("patrol boat")-1);
+                Toast.makeText(this, String.format("%s rakibin patrol boat gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    private boolean check_for_btshp_ptrlbt(ArrayList<ArrayList<Integer>> bulunanlar, ArrayList<ArrayList<ArrayList<Integer>>> mevcutlar, int count) {
-        int adet = 0;
-        for (ArrayList<ArrayList<Integer>> item_mevcut : mevcutlar) {
-            for (ArrayList<Integer> item_mevcut_sub : item_mevcut) {
-                for (ArrayList<Integer> item_bulunan : bulunanlar) {
-                    if (item_bulunan.get(0) == item_mevcut_sub.get(0) && item_bulunan.get(1) == item_mevcut_sub.get(1)) {
-                        adet++;
-                    }
+    private boolean check_for_btshp_ptrlbt(ArrayList<ArrayList<Integer>> bulunanlar, ArrayList<ArrayList<ArrayList<Integer>>> mevcutlar) {
+        for (ArrayList<ArrayList<Integer>> sublist : mevcutlar) {
+            int matchCount = 0;
+            for (ArrayList<Integer> element : sublist) {
+                if (bulunanlar.contains(element)) {
+                    matchCount++;
                 }
             }
-            if (adet == count) {
-                mevcutlar.remove(item_mevcut);
-                return true;
+            if (matchCount == sublist.size()) {
+                mevcutlar.remove(sublist);
+                return true; // Eğer 4 öğenin tamamı liste2'de bulunuyorsa, true döner
             }
         }
-        return false;
+        return false; // Hiçbir alt liste 4 öğenin hepsi liste2'de bulunmuyorsa, false döner
     }
+
 
     private void tabloyu_yukle(int turn) {
         gridLayout.removeAllViews();
