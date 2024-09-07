@@ -1,10 +1,14 @@
 package mert.kadakal.battleofships;
 
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,19 +20,43 @@ import java.util.Random;
 
 public class oyun extends AppCompatActivity {
 
+    HashMap<Integer, String> oyuncu_isimleri;
+    int turn;
+    TextView adetler_1o;
+    TextView adetler_2o;
+    HashMap<String, Integer> adetler_1;
+    HashMap<String, Integer> adetler_2;
+    ArrayList<ArrayList<Integer>> tablo_1_gorunurluk;
+    ArrayList<ArrayList<Integer>> tablo_2_gorunurluk;
+    ArrayList<ArrayList<String>> tablo_1;
+    ArrayList<ArrayList<String>> tablo_2;
+    int imageResId;
+    int filledSquareId;
+    GridLayout gridLayout;
+    TextView kim_saldiriyor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.oyun);
 
+        //oyun esnasında kullanılacak veriler
+        oyuncu_isimleri = new HashMap<>();
+        oyuncu_isimleri.put(0, getIntent().getStringExtra("1.oyuncu_ismi"));
+        oyuncu_isimleri.put(1, getIntent().getStringExtra("2.oyuncu_ismi"));
+        turn = 0;
+        kim_saldiriyor = findViewById(R.id.kimin_saldirdigi);
+        kim_saldiriyor.setText(Html.fromHtml(String.format("<b>%s</b> saldırıyor!", oyuncu_isimleri.get(turn))));
+
         //10x10 tablo oluştur
         //---------------------------------------------------------------------------------
-        GridLayout gridLayout = findViewById(R.id.grid_layout);
+        gridLayout = findViewById(R.id.grid_layout);
         int numRows = 10;
         int numColumns = 10;
 
         // Görsel kaynak
-        int imageResId = R.drawable.empty_square;
+        imageResId = R.drawable.empty_square;
+        filledSquareId = R.drawable.filled_square;
 
         // GridLayout ayarları
         gridLayout.setRowCount(numRows);
@@ -46,6 +74,23 @@ public class oyun extends AppCompatActivity {
             params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);
             params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);
             imageView.setLayoutParams(params);
+
+            // Hangi ImageView'a tıklandığını belirlemek için tag ayarla
+            imageView.setTag(i);  // Tag olarak sırasını kullanıyoruz
+
+            //tıklanan hücreyi algıla, saldırıyı gerçekleştir
+            View.OnClickListener imageClickListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Tıklanan ImageView'ı tag'ine göre belirleme
+                    int position = (int) v.getTag();  // Tag ile sırasını alıyoruz
+                    Log.d("turn", String.valueOf(turn));
+                    saldir(position/10, position%10);
+                }
+            };
+
+            // Tıklama dinleyicisi ekle
+            imageView.setOnClickListener(imageClickListener);
 
             // ImageView'ı GridLayout'a ekle
             gridLayout.addView(imageView);
@@ -81,23 +126,43 @@ public class oyun extends AppCompatActivity {
         adetler.put("destroyer", 1);
         adetler.put("submarine", 1);
         adetler.put("patrol boat", 4);
+        adetler_1 = new HashMap<>(); //gemilerin sayıları
+        adetler_1.put("carrier", 1);
+        adetler_1.put("battleship", 2);
+        adetler_1.put("destroyer", 1);
+        adetler_1.put("submarine", 1);
+        adetler_1.put("patrol boat", 4);
+        adetler_2 = new HashMap<>(); //gemilerin sayıları
+        adetler_2.put("carrier", 1);
+        adetler_2.put("battleship", 2);
+        adetler_2.put("destroyer", 1);
+        adetler_2.put("submarine", 1);
+        adetler_2.put("patrol boat", 4);
 
         //oyuncuların boş tablolarını oluştur
-        ArrayList<ArrayList<String>> tablo_1 = new ArrayList<>();
+        tablo_1 = new ArrayList<>();
+        tablo_2 = new ArrayList<>();
+        tablo_1_gorunurluk = new ArrayList<>();
+        tablo_2_gorunurluk = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             ArrayList<String> satir1 = new ArrayList<>();
+            ArrayList<Integer> satir2 = new ArrayList<>();
             for (int j = 0; j < 10; j++) {
                 satir1.add("x");
+                satir2.add(0);
             }
             tablo_1.add(satir1);
+            tablo_1_gorunurluk.add(satir2);
         }
-        ArrayList<ArrayList<String>> tablo_2 = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            ArrayList<String> satir2 = new ArrayList<>();
+            ArrayList<String> satir1 = new ArrayList<>();
+            ArrayList<Integer> satir2 = new ArrayList<>();
             for (int j = 0; j < 10; j++) {
-                satir2.add("x");
+                satir1.add("x");
+                satir2.add(0);
             }
-            tablo_2.add(satir2);
+            tablo_2.add(satir1);
+            tablo_2_gorunurluk.add(satir2);
         }
 
         //her gemi için adetleri kadar yerleştirme yap
@@ -138,8 +203,86 @@ public class oyun extends AppCompatActivity {
                 }
             }
         }
-        Log.d("tablo", formatTablo(tablo_1));
-        Log.d("tablo", formatTablo(tablo_2));
+
+        //oyuncuların kaçar gemisi kaldığını tablo altına yaz
+        adetleri_guncelle();
+    }
+
+    private void saldir(int sat, int sut) {
+        if (turn == 0) {
+            if (tablo_2_gorunurluk.get(sat).get(sut) == 0) {
+                tablo_2_gorunurluk.get(sat).set(sut, 1); //tablo_2'nin saldırılan konumunu görünür yap
+            }
+        } else {
+            if (tablo_1_gorunurluk.get(sat).get(sut) == 0) {
+                tablo_1_gorunurluk.get(sat).set(sut, 1); //tablo_1'nin saldırılan konumunu görünür yap
+            }
+        }
+        turn = 1 - turn;
+        tabloyu_yukle(turn);
+    }
+
+    private void tabloyu_yukle(int turn) {
+        gridLayout.removeAllViews();
+        kim_saldiriyor.setText(Html.fromHtml(String.format("<b>%s</b> saldırıyor!", oyuncu_isimleri.get(turn))));
+        for (int i = 0; i < 100; i++) {
+            ImageView imageView = new ImageView(this);
+
+            if (turn == 0) {
+                if (tablo_1_gorunurluk.get(i/10).get(i%10) == 1) {
+                    imageView.setImageResource(filledSquareId);
+                } else {
+                    imageView.setImageResource(imageResId);
+                }
+            } else {
+                if (tablo_2_gorunurluk.get(i/10).get(i%10) == 1) {
+                    imageView.setImageResource(filledSquareId);
+                } else {
+                    imageView.setImageResource(imageResId);
+                }
+            }
+
+            // Hücre boyutlarını ayarla
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.width = 0; // Sütun genişliği
+            params.height = 0; // Satır yüksekliği
+            params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);
+            params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);
+            imageView.setLayoutParams(params);
+
+            // Hangi ImageView'a tıklandığını belirlemek için tag ayarla
+            imageView.setTag(i);  // Tag olarak sırasını kullanıyoruz
+            gridLayout.addView(imageView);
+        }
+    }
+
+    private void adetleri_guncelle() {
+        adetler_1o = findViewById(R.id.adetler_1);
+        adetler_2o = findViewById(R.id.adetler_2);
+        adetler_1o.setText(Html.fromHtml(String.format("<b>%s</b><br><br>" +
+                "Carrier: %s<br>" +
+                "Battleship: %s<br>" +
+                "Destroyer: %s<br>" +
+                "Submarine: %s<br>" +
+                "Patrol Boat: %s<br>",
+                oyuncu_isimleri.get(0),
+                "●".repeat(adetler_1.get("carrier")),
+                "●".repeat(adetler_1.get("battleship")),
+                "●".repeat(adetler_1.get("destroyer")),
+                "●".repeat(adetler_1.get("submarine")),
+                "●".repeat(adetler_1.get("patrol boat")))));
+        adetler_2o.setText(Html.fromHtml(String.format("<b>%s</b><br><br>" +
+                "Carrier: %s<br>" +
+                "Battleship: %s<br>" +
+                "Destroyer: %s<br>" +
+                "Submarine: %s<br>" +
+                "Patrol Boat: %s<br>",
+                oyuncu_isimleri.get(1),
+                "●".repeat(adetler_2.get("carrier")),
+                "●".repeat(adetler_2.get("battleship")),
+                "●".repeat(adetler_2.get("destroyer")),
+                "●".repeat(adetler_2.get("submarine")),
+                "●".repeat(adetler_2.get("patrol boat")))));
     }
 
     public boolean check_if_placable(ArrayList<ArrayList<Integer>> list, ArrayList<ArrayList<String>> tablo) {
