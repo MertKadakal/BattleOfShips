@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.Random;
 
 public class oyun extends AppCompatActivity {
 
+    //oyun sürecinde gerekli değişken ve listeler
     HashMap<Integer, String> oyuncu_isimleri;
     int turn = 0;
     TextView adetler_1o;
@@ -48,6 +50,7 @@ public class oyun extends AppCompatActivity {
     ArrayList<ArrayList<ArrayList<Integer>>> patrolboat_xy_2;
     Animation slide_c_from_l;
     Animation slide_r_from_c;
+    boolean grid_tiklanabilirligi = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,24 +105,23 @@ public class oyun extends AppCompatActivity {
             params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);
             imageView.setLayoutParams(params);
 
-            // Hangi ImageView'a tıklandığını belirlemek için tag ayarla
             imageView.setTag(i);  // Tag olarak sırasını kullanıyoruz
 
             //tıklanan hücreyi algıla, saldırıyı gerçekleştir
             View.OnClickListener imageClickListener = new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
-                    // Tıklanan ImageView'ı tag'ine göre belirleme
-                    int position = (int) v.getTag();  // Tag ile sırasını alıyoruz
-                    Log.d("turn", String.valueOf(turn));
-                    saldir(position/10, position%10);
+                public void onClick(@NonNull View v) {
+                    if (grid_tiklanabilirligi) {
+                        // Tıklanan ImageView'ı tag'ine göre belirleme
+                        int position = (int) v.getTag();  // Tag ile sırasını alıyoruz
+                        Log.d("turn", String.valueOf(turn));
+                        saldir(position/10, position%10);
+                    }
+
                 }
             };
 
-            // Tıklama dinleyicisi ekle
             imageView.setOnClickListener(imageClickListener);
-
-            // ImageView'ı GridLayout'a ekle
             gridLayout.addView(imageView);
         }
         //---------------------------------------------------------------------------------
@@ -269,6 +271,7 @@ public class oyun extends AppCompatActivity {
         adetleri_guncelle();
     }
 
+    //bir hücre tıklandığında saldır
     private void saldir(int sat, int sut) {
         if (turn == 0) {
             if (tablo_2_gorunurluk.get(sat).get(sut) == 0) {
@@ -285,9 +288,8 @@ public class oyun extends AppCompatActivity {
         tabloyu_yukle(turn);
     }
 
+    //saldırıdan sonra herhangi bir gemi battı mı kontrol et
     private void check_capsized_battles(ArrayList<ArrayList<String>> tablo) {
-
-
         int c = 0;
         int d = 0;
         int s = 0;
@@ -442,7 +444,9 @@ public class oyun extends AppCompatActivity {
         return false;
     }
 
+    //bir gemi batırılırsa ekranda sağa kayan yazıyı göster
     private void kayan_batirildi_yazisi(String batan) {
+        grid_tiklanabilirligi = false;
         // Soldan kayarak ekrana gelsin
         kim_ne_batırdı.setText(Html.fromHtml(String.format("%s <br><b>%s</b><br>gemisi batırdı", oyuncu_isimleri.get(turn), batan)));
         kim_ne_batırdı.setVisibility(View.VISIBLE);
@@ -456,8 +460,10 @@ public class oyun extends AppCompatActivity {
                 kim_ne_batırdı.setVisibility(View.INVISIBLE);
             }
         }, 2000); // 2 saniye bekle
+        grid_tiklanabilirligi = true;
     }
 
+    //battleship veya patrol boatlardan biri batırıldı mı kontrol et
     private boolean check_for_btshp_ptrlbt(ArrayList<ArrayList<Integer>> bulunanlar, ArrayList<ArrayList<ArrayList<Integer>>> mevcutlar) {
         for (ArrayList<ArrayList<Integer>> sublist : mevcutlar) {
             int matchCount = 0;
@@ -473,8 +479,7 @@ public class oyun extends AppCompatActivity {
         }
         return false; // Hiçbir alt liste 4 öğenin hepsi liste2'de bulunmuyorsa, false döner
     }
-
-
+    
     private void tabloyu_yukle(int turn) {
         gridLayout.removeAllViews();
         kim_saldiriyor.setText(Html.fromHtml(String.format("<b>%s</b> saldırıyor!", oyuncu_isimleri.get(turn))));
@@ -546,31 +551,30 @@ public class oyun extends AppCompatActivity {
             View.OnClickListener imageClickListener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // Tıklanan ImageView'ı tag'ine göre belirleme
-                    int position = (int) v.getTag();  // Tag ile sırasını alıyoruz
-                    Log.d("turn", String.valueOf(turn));
-                    if (turn == 0) {
-                        if (tablo_2_gorunurluk.get(position/10).get(position%10) == 1) {
-                            Toast.makeText(oyun.this, "Boş bir hücre seçiniz", Toast.LENGTH_SHORT).show();
+                    if (grid_tiklanabilirligi) {
+                        // Tıklanan ImageView'ı tag'ine göre belirleme
+                        int position = (int) v.getTag();  // Tag ile sırasını alıyoruz
+                        Log.d("turn", String.valueOf(turn));
+                        if (turn == 0) {
+                            if (tablo_2_gorunurluk.get(position/10).get(position%10) == 1) {
+                                Toast.makeText(oyun.this, "Boş bir hücre seçiniz", Toast.LENGTH_SHORT).show();
+                            } else {
+                                saldir(position/10, position%10);
+                                adetleri_guncelle();
+                            }
                         } else {
-                            saldir(position/10, position%10);
-                            adetleri_guncelle();
-                        }
-                    } else {
-                        if (tablo_1_gorunurluk.get(position/10).get(position%10) == 1) {
-                            Toast.makeText(oyun.this, "Boş bir hücre seçiniz", Toast.LENGTH_SHORT).show();
-                        } else {
-                            saldir(position/10, position%10);
-                            adetleri_guncelle();
+                            if (tablo_1_gorunurluk.get(position/10).get(position%10) == 1) {
+                                Toast.makeText(oyun.this, "Boş bir hücre seçiniz", Toast.LENGTH_SHORT).show();
+                            } else {
+                                saldir(position/10, position%10);
+                                adetleri_guncelle();
+                            }
                         }
                     }
                 }
             };
 
-            // Tıklama dinleyicisi ekle
             imageView.setOnClickListener(imageClickListener);
-
-            // Hangi ImageView'a tıklandığını belirlemek için tag ayarla
             imageView.setTag(i);  // Tag olarak sırasını kullanıyoruz
             gridLayout.addView(imageView);
         }
