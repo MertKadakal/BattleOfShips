@@ -1,9 +1,12 @@
 package mert.kadakal.battleofships;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Html;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -11,7 +14,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -22,6 +24,7 @@ public class oyun extends AppCompatActivity {
     int turn = 0;
     TextView adetler_1o;
     TextView adetler_2o;
+    TextView kim_ne_batırdı;
     HashMap<String, Integer> adetler_1;
     HashMap<String, Integer> adetler_2;
     ArrayList<ArrayList<Integer>> tablo_1_gorunurluk;
@@ -42,11 +45,19 @@ public class oyun extends AppCompatActivity {
     ArrayList<ArrayList<ArrayList<Integer>>> patrolboat_xy_1;
     ArrayList<ArrayList<ArrayList<Integer>>> battleship_xy_2;
     ArrayList<ArrayList<ArrayList<Integer>>> patrolboat_xy_2;
+    Animation slide_c_from_l;
+    Animation slide_r_from_c;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.oyun);
+
+        kim_ne_batırdı = findViewById(R.id.gemi_batirildi);
+        kim_ne_batırdı.setVisibility(View.INVISIBLE);
+
+        slide_c_from_l = AnimationUtils.loadAnimation(this, R.transition.slide_center_from_left);
+        slide_r_from_c = AnimationUtils.loadAnimation(this, R.transition.slide_right_from_center);
 
         //oyun esnasında kullanılacak veriler
         oyuncu_isimleri = new HashMap<>();
@@ -274,6 +285,8 @@ public class oyun extends AppCompatActivity {
     }
 
     private void check_capsized_battles(ArrayList<ArrayList<String>> tablo) {
+
+
         int c = 0;
         int d = 0;
         int s = 0;
@@ -309,29 +322,26 @@ public class oyun extends AppCompatActivity {
                     }
                 }
             }
-            Log.d("1", battleships.toString());
-            Log.d("1", patrol_boats.toString());
-
             //kontrol et
             if (c == 5 && adetler_2.get("carrier") != 0) {
                 adetler_2.replace("carrier", 0);
-                Toast.makeText(this, String.format("%s rakibin carrier gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+                kayan_batirildi_yazisi("Carrier");
             }
             if (d == 3 && adetler_2.get("destroyer") != 0) {
                 adetler_2.replace("destroyer", 0);
-                Toast.makeText(this, String.format("%s rakibin destroyer gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+                kayan_batirildi_yazisi("Destroyer");
             }
             if (s == 3 && adetler_2.get("submarine") != 0) {
                 adetler_2.replace("submarine", 0);
-                Toast.makeText(this, String.format("%s rakibin submarine gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+                kayan_batirildi_yazisi("Submarine");
             }
             if (battleships.size() > 3 && adetler_2.get("battleship") != 0 && check_for_btshp_ptrlbt(battleships, battleship_xy_2)) {
                 adetler_2.replace("battleship", adetler_2.get("battleship")-1);
-                Toast.makeText(this, String.format("%s rakibin bir battleship gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+                kayan_batirildi_yazisi("Battleship");
             }
             if (patrol_boats.size() > 1 && adetler_2.get("patrol boat") != 0 && check_for_btshp_ptrlbt(patrol_boats, patrolboat_xy_2)) {
                 adetler_2.replace("patrol boat", adetler_2.get("patrol boat")-1);
-                Toast.makeText(this, String.format("%s rakibin patrol boat gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+                kayan_batirildi_yazisi("Patrol Boat");
             }
         } else {
             for (int i = 0; i < 10; i++) {
@@ -363,30 +373,44 @@ public class oyun extends AppCompatActivity {
                     }
                 }
             }
-            Log.d("0", battleships.toString());
-            Log.d("0", patrol_boats.toString());
             //kontrol et
             if (c == 5 && adetler_1.get("carrier") != 0) {
                 adetler_1.replace("carrier", 0);
-                Toast.makeText(this, String.format("%s rakibin carrier gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+                kayan_batirildi_yazisi("Carrier");
             }
             if (d == 3 && adetler_1.get("destroyer") != 0) {
                 adetler_1.replace("destroyer", 0);
-                Toast.makeText(this, String.format("%s rakibin destroyer gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+                kayan_batirildi_yazisi("Destroyer");
             }
             if (s == 3 && adetler_1.get("submarine") != 0) {
                 adetler_1.replace("submarine", 0);
-                Toast.makeText(this, String.format("%s rakibin submarine gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+                kayan_batirildi_yazisi("Submarine");
             }
             if (battleships.size() > 3 && adetler_1.get("battleship") != 0 && check_for_btshp_ptrlbt(battleships, battleship_xy_1)) {
                 adetler_1.replace("battleship", adetler_1.get("battleship")-1);
-                Toast.makeText(this, String.format("%s rakibin battleship gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+                kayan_batirildi_yazisi("Battleship");
             }
             if (patrol_boats.size() > 1 && adetler_1.get("patrol boat") != 0 && check_for_btshp_ptrlbt(patrol_boats, patrolboat_xy_1)) {
                 adetler_1.replace("patrol boat", adetler_1.get("patrol boat")-1);
-                Toast.makeText(this, String.format("%s rakibin patrol boat gemisini batırdı", oyuncu_isimleri.get(turn)), Toast.LENGTH_SHORT).show();
+                kayan_batirildi_yazisi("Patrol Boat");
             }
         }
+    }
+
+    private void kayan_batirildi_yazisi(String batan) {
+        // Soldan kayarak ekrana gelsin
+        kim_ne_batırdı.setText(Html.fromHtml(String.format("%s <br><b>%s</b><br>gemisi batırdı", oyuncu_isimleri.get(turn), batan)));
+        kim_ne_batırdı.setVisibility(View.VISIBLE);
+        kim_ne_batırdı.startAnimation(slide_c_from_l);
+
+        // 2 saniye bekledikten sonra sağa kayarak kaybolsun
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                kim_ne_batırdı.startAnimation(slide_r_from_c);
+                kim_ne_batırdı.setVisibility(View.INVISIBLE);
+            }
+        }, 2000); // 2 saniye bekle
     }
 
     private boolean check_for_btshp_ptrlbt(ArrayList<ArrayList<Integer>> bulunanlar, ArrayList<ArrayList<ArrayList<Integer>>> mevcutlar) {
@@ -543,16 +567,5 @@ public class oyun extends AppCompatActivity {
             }
         }
         return true;
-    }
-
-    private String formatTablo(ArrayList<ArrayList<String>> tablo) {
-        StringBuilder sb = new StringBuilder();
-        for (ArrayList<String> row : tablo) {
-            for (String cell : row) {
-                sb.append(cell).append(" ");
-            }
-            sb.append("\n");
-        }
-        return sb.toString();
     }
 }

@@ -70,5 +70,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/gemi_batirildi"
+        android:layout_width="1670dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:background="#9E3A3A"
+        android:fontFamily="sans-serif-condensed"
+        android:text="Gemi batırıldı"
+        android:textAlignment="center"
+        android:textColor="#FFFFFF"
+        android:textSize="40sp"
+        android:translationY="180dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
