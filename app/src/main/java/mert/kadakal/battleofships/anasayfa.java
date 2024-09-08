@@ -41,7 +41,8 @@ public class anasayfa extends AppCompatActivity {
         oynanis.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(anasayfa.this, "Oynanış", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(anasayfa.this, oynanis.class);
+                startActivity(intent);
             }
         });
     }

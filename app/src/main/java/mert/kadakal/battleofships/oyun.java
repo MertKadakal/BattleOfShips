@@ -1,5 +1,6 @@
 package mert.kadakal.battleofships;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Html;
@@ -325,23 +326,33 @@ public class oyun extends AppCompatActivity {
             //kontrol et
             if (c == 5 && adetler_2.get("carrier") != 0) {
                 adetler_2.replace("carrier", 0);
-                kayan_batirildi_yazisi("Carrier");
+                if (!(oyun_bitti_mi())) {
+                    kayan_batirildi_yazisi("Carrier");
+                }
             }
             if (d == 3 && adetler_2.get("destroyer") != 0) {
                 adetler_2.replace("destroyer", 0);
-                kayan_batirildi_yazisi("Destroyer");
+                if (!(oyun_bitti_mi())) {
+                    kayan_batirildi_yazisi("Destroyer");
+                }
             }
             if (s == 3 && adetler_2.get("submarine") != 0) {
                 adetler_2.replace("submarine", 0);
-                kayan_batirildi_yazisi("Submarine");
+                if (!(oyun_bitti_mi())) {
+                    kayan_batirildi_yazisi("Submarine");
+                }
             }
             if (battleships.size() > 3 && adetler_2.get("battleship") != 0 && check_for_btshp_ptrlbt(battleships, battleship_xy_2)) {
                 adetler_2.replace("battleship", adetler_2.get("battleship")-1);
-                kayan_batirildi_yazisi("Battleship");
+                if (!(oyun_bitti_mi())) {
+                    kayan_batirildi_yazisi("Battleship");
+                }
             }
             if (patrol_boats.size() > 1 && adetler_2.get("patrol boat") != 0 && check_for_btshp_ptrlbt(patrol_boats, patrolboat_xy_2)) {
                 adetler_2.replace("patrol boat", adetler_2.get("patrol boat")-1);
-                kayan_batirildi_yazisi("Patrol Boat");
+                if (!(oyun_bitti_mi())) {
+                    kayan_batirildi_yazisi("Patrol Boat");
+                }
             }
         } else {
             for (int i = 0; i < 10; i++) {
@@ -376,25 +387,59 @@ public class oyun extends AppCompatActivity {
             //kontrol et
             if (c == 5 && adetler_1.get("carrier") != 0) {
                 adetler_1.replace("carrier", 0);
-                kayan_batirildi_yazisi("Carrier");
+                if (!(oyun_bitti_mi())) {
+                    kayan_batirildi_yazisi("Carrier");
+                }
             }
             if (d == 3 && adetler_1.get("destroyer") != 0) {
                 adetler_1.replace("destroyer", 0);
-                kayan_batirildi_yazisi("Destroyer");
+                if (!(oyun_bitti_mi())) {
+                    kayan_batirildi_yazisi("Destroyer");
+                }
             }
             if (s == 3 && adetler_1.get("submarine") != 0) {
                 adetler_1.replace("submarine", 0);
-                kayan_batirildi_yazisi("Submarine");
+                if (!(oyun_bitti_mi())) {
+                    kayan_batirildi_yazisi("Submarine");
+                }
             }
             if (battleships.size() > 3 && adetler_1.get("battleship") != 0 && check_for_btshp_ptrlbt(battleships, battleship_xy_1)) {
                 adetler_1.replace("battleship", adetler_1.get("battleship")-1);
-                kayan_batirildi_yazisi("Battleship");
+                if (!(oyun_bitti_mi())) {
+                    kayan_batirildi_yazisi("Battleship");
+                }
             }
             if (patrol_boats.size() > 1 && adetler_1.get("patrol boat") != 0 && check_for_btshp_ptrlbt(patrol_boats, patrolboat_xy_1)) {
                 adetler_1.replace("patrol boat", adetler_1.get("patrol boat")-1);
-                kayan_batirildi_yazisi("Patrol Boat");
+                if (!(oyun_bitti_mi())) {
+                    kayan_batirildi_yazisi("Patrol Boat");
+                }
             }
         }
+    }
+
+    private boolean oyun_bitti_mi() {
+        if (adetler_1.get("carrier") == 0 &&
+                adetler_1.get("battleship") == 0 &&
+                adetler_1.get("destroyer") == 0 &&
+                adetler_1.get("submarine") == 0 &&
+                adetler_1.get("patrol boat") == 0) {
+            Intent intent = new Intent(oyun.this, kazanan.class);
+            intent.putExtra("kazanan", oyuncu_isimleri.get(1));
+            startActivity(intent);
+            return true;
+        }
+        if (adetler_2.get("carrier") == 0 &&
+                adetler_2.get("battleship") == 0 &&
+                adetler_2.get("destroyer") == 0 &&
+                adetler_2.get("submarine") == 0 &&
+                adetler_2.get("patrol boat") == 0) {
+            Intent intent = new Intent(oyun.this, kazanan.class);
+            intent.putExtra("kazanan", oyuncu_isimleri.get(0));
+            startActivity(intent);
+            return true;
+        }
+        return false;
     }
 
     private void kayan_batirildi_yazisi(String batan) {
