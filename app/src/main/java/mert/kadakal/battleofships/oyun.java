@@ -276,11 +276,25 @@ public class oyun extends AppCompatActivity {
         if (turn == 0) {
             if (tablo_2_gorunurluk.get(sat).get(sut) == 0) {
                 tablo_2_gorunurluk.get(sat).set(sut, 1); //tablo_2'nin saldırılan konumunu görünür yap
+                tabloyu_yukle(0);
+                // 2 saniye (2000 milisaniye) bekle
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 check_capsized_battles(tablo_2);
             }
         } else {
             if (tablo_1_gorunurluk.get(sat).get(sut) == 0) {
                 tablo_1_gorunurluk.get(sat).set(sut, 1); //tablo_1'nin saldırılan konumunu görünür yap
+                tabloyu_yukle(1);
+                // 2 saniye (2000 milisaniye) bekle
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 check_capsized_battles(tablo_1);
             }
         }
